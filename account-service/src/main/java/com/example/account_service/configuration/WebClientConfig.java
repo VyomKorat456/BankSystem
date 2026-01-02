@@ -10,7 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
     @Bean
-    WebClient transactionWebClient(OAuth2AuthorizedClientManager manager, WebClient.Builder builder) {
+        WebClient transactionWebClient(OAuth2AuthorizedClientManager manager, WebClient.Builder builder) {
 
         var oauth = new ServletOAuth2AuthorizedClientExchangeFilterFunction(manager);
         oauth.setDefaultClientRegistrationId("transaction-client");
@@ -18,6 +18,13 @@ public class WebClientConfig {
         return builder
                 .apply(oauth.oauth2Configuration())
                 .baseUrl("http://TRANSACTION-SERVICE")
+                .build();
+    }
+
+    @Bean
+    WebClient authWebClient(WebClient.Builder builder) {
+        return builder
+                .baseUrl("http://AUTH-SERVICE")
                 .build();
     }
 

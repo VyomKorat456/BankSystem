@@ -14,8 +14,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private static final String SECRET =
-            "thismyverysecurekeyforjwtauthenticationtoken123456";
+    private static final String SECRET = "thismyverysecurekeyforjwtauthenticationtoken123456";
 
     private static final long EXPIRATION = 1000 * 60 * 60; // 1 hour
 
@@ -31,8 +30,19 @@ public class JwtUtil {
                 .claim("role", user.getRole())
                 .setIssuedAt(new Date())
                 .setExpiration(
-                        new Date(System.currentTimeMillis() + EXPIRATION)
-                )
+                        new Date(System.currentTimeMillis() + EXPIRATION))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateServiceToken(String clientId, String role, String scope) {
+        return Jwts.builder()
+                .setSubject(clientId)
+                .claim("role", role)
+                .claim("scope", scope)
+                .setIssuedAt(new Date())
+                .setExpiration(
+                        new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

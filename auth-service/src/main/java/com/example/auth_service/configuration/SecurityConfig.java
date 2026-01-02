@@ -11,56 +11,62 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        log.info("=== Configuring SecurityFilterChain ===");
-        http
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                log.info("=== Configuring SecurityFilterChain ===");
+                http
 
-                // 🔥 REQUIRED
-                .csrf(csrf -> csrf.disable())
+                                // 🔥 REQUIRED
+                                .csrf(csrf -> csrf.disable())
 
-                // 🔥 REQUIRED — ENABLE CORS
-                .cors(cors -> {})
+                                // 🔥 REQUIRED — ENABLE CORS
+                                .cors(cors -> {
+                                })
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                                // 🔥 DISABLE BASIC AUTH (we handle it manually in Controller)
+                                .httpBasic(basic -> basic.disable())
 
-                .authorizeHttpRequests(auth -> auth
-                        // 🔥 REQUIRED — ALLOW PREFLIGHT
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
-                        .permitAll()
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                        // 🔥 AUTH ENDPOINTS
-                        .requestMatchers(
-                                "/auth/**",
+                                .authorizeHttpRequests(auth -> auth
+                                                // 🔥 REQUIRED — ALLOW PREFLIGHT
+                                                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
+                                                .permitAll()
 
-                        "/auth/login",
-                                "/auth/register",
-                                "/actuator/**"
-                        ).permitAll()
+                                                // 🔥 AUTH ENDPOINTS
+                                                .requestMatchers(
+                                                                "/auth/**",
 
-                        .anyRequest().authenticated()
-                )
+                                                                "/auth/login",
+                                                                "/auth/register",
+                                                                "/actuator/**")
+                                                .permitAll()
 
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                                                .anyRequest().authenticated())
 
-        return http.build();
-    }
+                                .addFilterBefore(
+                                                jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+                return http.build();
+        }
+
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
+
+        @Bean
+        public org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer webSecurityCustomizer() {
+                return (web) -> web.ignoring().requestMatchers("/auth/**");
+        }
 }
-

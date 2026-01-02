@@ -28,7 +28,8 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
                                                                 "/actuator/**",
-                                                                "/oauth2/**")
+                                                                "/oauth2/**",
+                                                                "/account/home")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .addFilterBefore(

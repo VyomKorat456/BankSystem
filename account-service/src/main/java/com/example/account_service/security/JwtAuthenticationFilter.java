@@ -23,7 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
+    @org.springframework.beans.factory.annotation.Qualifier("authWebClient")
+    private final org.springframework.web.reactive.function.client.WebClient authWebClient;
 
     @Override
     protected void doFilterInternal(
@@ -42,26 +43,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            log.debug("Validating token: {}", token.substring(0, Math.min(token.length(), 10)) + "...");
-            Claims claims = jwtUtil.validateToken(token);
+            log.debug("Validating token with Auth Service...");
 
-            String userId = claims.getSubject();
-            String role = claims.get("role", String.class);
+            com.example.account_service.DTO.response.ValidateTokenResponse validationResponse = authWebClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/auth/validate")
+                            .queryParam("token", token)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(com.example.account_service.DTO.response.ValidateTokenResponse.class)
+                    .block();
 
-            log.info("Token valid. UserID: {}, Role: {}", userId, role);
+            if (validationResponse != null && validationResponse.isValid()) {
+                String userId = validationResponse.getUserId();
+                String role = validationResponse.getRole();
 
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userId,
-                    null,
-                    List.of(new SimpleGrantedAuthority(role)));
+                log.info("Token valid. UserID: {}, Role: {}", userId, role);
 
-            authentication.setDetails(
-                    new WebAuthenticationDetailsSource().buildDetails(request));
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userId,
+                        null,
+                        List.of(new SimpleGrantedAuthority(role)));
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                log.warn("Token validation failed or returned invalid");
+                SecurityContextHolder.clearContext();
+            }
 
         } catch (Exception e) {
-            log.error("Token validation failed: {}", e.getMessage());
+            log.error("Token validation error: {}", e.getMessage());
             SecurityContextHolder.clearContext();
         }
 

@@ -1,4 +1,4 @@
-package com.example.account_service.configuration;
+package com.example.account_service.logger;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -3,3 +3,16 @@ spring:
     name: auth-service
   config:
     import: configserver:http://localhost:8888
+  security:
+    clients:
+      account-service:
+        secret: account-secret-123
+      transaction-service:
+        secret: transaction-secret-123
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+
+  

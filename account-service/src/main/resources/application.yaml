@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: account-service
+
+  config:
+    import: configserver:http://localhost:8888
+
+  security:
+    oauth2:
+      client:
+        provider:
+          transaction-provider:
+            token-uri: http://localhost:9000/auth/token
+        registration:
+          transaction-client:
+            client-id: account-service
+            client-secret: account-secret-123
+            authorization-grant-type: client_credentials
+            scope: transaction.write
+            provider: transaction-provider
